@@ -42,6 +42,18 @@ public class FormLembur extends JFrame {
         pnlForm.add(createLabel("Jumlah Jam:"));
         txtJumlah = new JTextField(); pnlForm.add(txtJumlah);
         
+        // Panel Buttons
+        JPanel pnlButtons = new JPanel();
+        pnlButtons.setOpaque(false);
+        JButton btnSave = new JButton("Save");
+        JButton btnReset = new JButton("Reset");
+        JButton btnUpdate = new JButton("Update");
+        JButton btnDelete = new JButton("Delete");
+        JButton btnExit = new JButton("Exit");
+        
+        pnlButtons.add(btnSave); pnlButtons.add(btnReset);
+        pnlButtons.add(btnUpdate); pnlButtons.add(btnDelete); pnlButtons.add(btnExit);
+
         JPanel pnlTop = new JPanel(new BorderLayout());
         pnlTop.setOpaque(false);
         pnlTop.add(pnlForm, BorderLayout.CENTER);

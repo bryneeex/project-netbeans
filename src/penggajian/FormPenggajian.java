@@ -56,6 +56,20 @@ public class FormPenggajian extends JFrame {
         pnlForm.add(createLabel("Total Gaji Bersih:"));
         txtTotalGaji = new JTextField(); txtTotalGaji.setEditable(false); pnlForm.add(txtTotalGaji);
         
+        // Panel Buttons
+        JPanel pnlButtons = new JPanel();
+        pnlButtons.setOpaque(false);
+        JButton btnHitung = new JButton("Hitung Total");
+        JButton btnSave = new JButton("Save");
+        JButton btnReset = new JButton("Reset");
+        JButton btnUpdate = new JButton("Update");
+        JButton btnDelete = new JButton("Delete");
+        JButton btnExit = new JButton("Exit");
+        
+        pnlButtons.add(btnHitung);
+        pnlButtons.add(btnSave); pnlButtons.add(btnReset);
+        pnlButtons.add(btnUpdate); pnlButtons.add(btnDelete); pnlButtons.add(btnExit);
+
         JPanel pnlTop = new JPanel(new BorderLayout());
         pnlTop.setOpaque(false);
         pnlTop.add(pnlForm, BorderLayout.CENTER);
