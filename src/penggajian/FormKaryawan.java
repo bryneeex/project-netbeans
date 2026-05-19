@@ -145,16 +145,18 @@ public class FormKaryawan extends JFrame {
             txtNama.setText(tableModel.getValueAt(row, 1).toString());
             cbIdGolongan.setSelectedItem(tableModel.getValueAt(row, 2).toString());
             
-            String jk = tableModel.getValueAt(row, 3).toString();
-            if(jk.equals("Laki-laki")) rbLaki.setSelected(true);
-            else if(jk.equals("Perempuan")) rbPerempuan.setSelected(true);
+            String jk = tableModel.getValueAt(row, 3).toString().toLowerCase();
+            if(jk.contains("laki")) rbLaki.setSelected(true);
+            else if(jk.contains("perempuan")) rbPerempuan.setSelected(true);
+            else { rbLaki.setSelected(false); rbPerempuan.setSelected(false); }
             
             txtTempat.setText(tableModel.getValueAt(row, 4).toString());
             txtTanggalLahirPlaceholder.setText(tableModel.getValueAt(row, 5).toString());
             
-            String stat = tableModel.getValueAt(row, 6).toString();
-            if(stat.equals("Menikah")) rbMenikah.setSelected(true);
-            else if(stat.equals("Belum Menikah")) rbBelum.setSelected(true);
+            String stat = tableModel.getValueAt(row, 6).toString().toLowerCase();
+            if(stat.contains("menikah") && !stat.contains("belum")) rbMenikah.setSelected(true);
+            else if(stat.contains("belum") || stat.contains("single")) rbBelum.setSelected(true);
+            else { rbMenikah.setSelected(false); rbBelum.setSelected(false); }
             
             txtAlamat.setText(tableModel.getValueAt(row, 7).toString());
         }
