@@ -13,6 +13,7 @@ public class FormPenggajian extends JFrame {
     
     private JTextField txtTanggalGajiPlaceholder;
     // private JDateChooser dateGaji;
+    private boolean isUpdating = false;
 
     public FormPenggajian() {
         setTitle("Daftar Gaji Karyawan");
@@ -95,12 +96,57 @@ public class FormPenggajian extends JFrame {
                 tabelKlik();
             }
         });
-        
+        cbIdKaryawan.addActionListener(e -> {
+            if (!isUpdating) {
+                updateKaryawanDetails();
+            }
+        });
+
         loadKaryawan();
         loadData();
     }
     
+    private void updateKaryawanDetails() {
+        if (cbIdKaryawan.getSelectedItem() == null) return;
+        String idKaryawan = cbIdKaryawan.getSelectedItem().toString();
+        try {
+            // 1. Fetch employee details and Golongan details
+            String sql = "SELECT k.nama, k.status, g.nama_golongan, g.gaji_pokok, g.tunjangan_istri, g.tunjangan_anak, g.transport, g.uang_makan " +
+                         "FROM tb_karyawan k JOIN tb_golongan g ON k.id_golongan = g.id_golongan WHERE k.id_karyawan = ?";
+            java.sql.ResultSet rs = DatabaseHelper.executeQuery(sql, idKaryawan);
+            if (rs != null && rs.next()) {
+                txtNamaKaryawan.setText(rs.getString("nama"));
+                txtGolongan.setText(rs.getString("nama_golongan"));
+                
+                double gapok = rs.getDouble("gaji_pokok");
+                double tunjIstri = rs.getString("status").equalsIgnoreCase("Menikah") ? rs.getDouble("tunjangan_istri") : 0;
+                double tunjAnak = rs.getDouble("tunjangan_anak");
+                double transport = rs.getDouble("transport");
+                double makan = rs.getDouble("uang_makan");
+                
+                double jumlahGaji = gapok + tunjIstri + tunjAnak + transport + makan;
+                txtJumlahGaji.setText(String.valueOf(jumlahGaji));
+            }
+            
+            // 2. Fetch total lembur hours and calculate money (assume Rp 30,000 per hour)
+            String sqlLembur = "SELECT SUM(jumlah_jam) as total_jam FROM tb_lembur WHERE id_karyawan = ?";
+            java.sql.ResultSet rsLembur = DatabaseHelper.executeQuery(sqlLembur, idKaryawan);
+            if (rsLembur != null && rsLembur.next()) {
+                int totalJam = rsLembur.getInt("total_jam");
+                double lemburMoney = totalJam * 30000.0;
+                txtJumlahLembur.setText(String.valueOf(lemburMoney));
+            } else {
+                txtJumlahLembur.setText("0.0");
+            }
+            
+            hitungGaji();
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
     private void loadKaryawan() {
+        isUpdating = true;
         cbIdKaryawan.removeAllItems();
         try {
             java.sql.ResultSet rs = DatabaseHelper.executeQuery("SELECT id_karyawan FROM tb_karyawan");
@@ -110,6 +156,8 @@ public class FormPenggajian extends JFrame {
         } catch (java.sql.SQLException e) {
             e.printStackTrace();
         }
+        isUpdating = false;
+        updateKaryawanDetails();
     }
     
     private void loadData() {
@@ -117,7 +165,7 @@ public class FormPenggajian extends JFrame {
         try {
             java.sql.ResultSet rs = DatabaseHelper.executeQuery("SELECT * FROM tb_penggajian");
             while (rs != null && rs.next()) {
-                String tglMySQL = rs.getString("tanggal");
+                String tglMySQL = rs.getString("tanggal_gaji"); // corrected to matches db schema tb_penggajian!
                 String tglDisplay = tglMySQL;
                 try {
                     java.util.Date date = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(tglMySQL);
@@ -125,9 +173,9 @@ public class FormPenggajian extends JFrame {
                 } catch (Exception ignored) {}
                 
                 tableModel.addRow(new Object[]{
-                    rs.getString("id_penggajian"), tglDisplay, rs.getString("id_karyawan"), 
+                    rs.getString("id_gaji"), tglDisplay, rs.getString("id_karyawan"), 
                     rs.getString("nama_karyawan"), rs.getString("golongan"), 
-                    rs.getDouble("gaji_pokok"), rs.getDouble("lembur"), 
+                    rs.getDouble("jumlah_gaji"), rs.getDouble("jumlah_lembur"), 
                     rs.getDouble("potongan"), rs.getDouble("total_gaji")
                 });
             }
@@ -141,7 +189,11 @@ public class FormPenggajian extends JFrame {
         if(row >= 0) {
             txtIdGaji.setText(tableModel.getValueAt(row, 0).toString());
             txtTanggalGajiPlaceholder.setText(tableModel.getValueAt(row, 1).toString());
+            
+            isUpdating = true;
             cbIdKaryawan.setSelectedItem(tableModel.getValueAt(row, 2).toString());
+            isUpdating = false;
+            
             txtNamaKaryawan.setText(tableModel.getValueAt(row, 3).toString());
             txtGolongan.setText(tableModel.getValueAt(row, 4).toString());
             txtJumlahGaji.setText(tableModel.getValueAt(row, 5).toString());
@@ -154,7 +206,9 @@ public class FormPenggajian extends JFrame {
     private void resetForm() {
         txtIdGaji.setText("");
         txtTanggalGajiPlaceholder.setText("YYYY-MM-DD");
+        isUpdating = true;
         if(cbIdKaryawan.getItemCount() > 0) cbIdKaryawan.setSelectedIndex(0);
+        isUpdating = false;
         txtNamaKaryawan.setText("");
         txtGolongan.setText("");
         txtJumlahGaji.setText("");
