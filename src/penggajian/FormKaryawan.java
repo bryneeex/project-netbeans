@@ -95,6 +95,76 @@ public class FormKaryawan extends JFrame {
         
         btnExit.addActionListener(e -> dispose());
         btnSave.addActionListener(e -> simpanData());
+        btnUpdate.addActionListener(e -> updateData());
+        btnDelete.addActionListener(e -> deleteData());
+        btnReset.addActionListener(e -> resetForm());
+        
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tabelKlik();
+            }
+        });
+        
+        loadData();
+    }
+    
+    private void loadData() {
+        tableModel.setRowCount(0);
+        try {
+            java.sql.ResultSet rs = DatabaseHelper.executeQuery("SELECT * FROM tb_karyawan");
+            while (rs != null && rs.next()) {
+                String tglMySQL = rs.getString("tanggal_lahir");
+                String tglDisplay = tglMySQL;
+                // Format YYYY-MM-DD kembali ke DD-MM-YYYY untuk display
+                try {
+                    java.text.SimpleDateFormat formatDB = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                    java.text.SimpleDateFormat formatDisplay = new java.text.SimpleDateFormat("dd-MM-yyyy");
+                    java.util.Date date = formatDB.parse(tglMySQL);
+                    tglDisplay = formatDisplay.format(date);
+                } catch (Exception ignored) {}
+                
+                tableModel.addRow(new Object[]{
+                    rs.getString("id_karyawan"), rs.getString("nama"), rs.getString("id_golongan"),
+                    rs.getString("jenis_kelamin"), rs.getString("tempat_lahir"), tglDisplay,
+                    rs.getString("status"), rs.getString("alamat")
+                });
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void tabelKlik() {
+        int row = table.getSelectedRow();
+        if(row >= 0) {
+            txtIdKaryawan.setText(tableModel.getValueAt(row, 0).toString());
+            txtNama.setText(tableModel.getValueAt(row, 1).toString());
+            cbIdGolongan.setSelectedItem(tableModel.getValueAt(row, 2).toString());
+            
+            String jk = tableModel.getValueAt(row, 3).toString();
+            if(jk.equals("Laki-laki")) rbLaki.setSelected(true);
+            else if(jk.equals("Perempuan")) rbPerempuan.setSelected(true);
+            
+            txtTempat.setText(tableModel.getValueAt(row, 4).toString());
+            txtTanggalLahirPlaceholder.setText(tableModel.getValueAt(row, 5).toString());
+            
+            String stat = tableModel.getValueAt(row, 6).toString();
+            if(stat.equals("Menikah")) rbMenikah.setSelected(true);
+            else if(stat.equals("Belum Menikah")) rbBelum.setSelected(true);
+            
+            txtAlamat.setText(tableModel.getValueAt(row, 7).toString());
+        }
+    }
+    
+    private void resetForm() {
+        txtIdKaryawan.setText("");
+        txtNama.setText("");
+        cbIdGolongan.setSelectedIndex(0);
+        rbLaki.setSelected(false); rbPerempuan.setSelected(false);
+        txtTempat.setText("");
+        txtTanggalLahirPlaceholder.setText("YYYY-MM-DD");
+        rbMenikah.setSelected(false); rbBelum.setSelected(false);
+        txtAlamat.setText("");
     }
     
     private void simpanData() {
@@ -127,7 +197,58 @@ public class FormKaryawan extends JFrame {
         String sql = "INSERT INTO tb_karyawan (id_karyawan, nama, id_golongan, jenis_kelamin, tempat_lahir, tanggal_lahir, status, alamat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
         if (DatabaseHelper.executeUpdate(sql, id, nama, idGol, jk, tempat, tglMySQL, status, alamat)) {
             JOptionPane.showMessageDialog(this, "Data Karyawan berhasil disimpan!");
-            tableModel.addRow(new Object[]{id, nama, idGol, jk, tempat, tglInput, status, alamat});
+            loadData();
+            resetForm();
+        }
+    }
+    
+    private void updateData() {
+        String id = txtIdKaryawan.getText();
+        String nama = txtNama.getText();
+        String idGol = cbIdGolongan.getSelectedItem().toString();
+        String jk = rbLaki.isSelected() ? "Laki-laki" : (rbPerempuan.isSelected() ? "Perempuan" : "");
+        String tempat = txtTempat.getText();
+        String tglInput = txtTanggalLahirPlaceholder.getText();
+        String status = rbMenikah.isSelected() ? "Menikah" : (rbBelum.isSelected() ? "Belum Menikah" : "");
+        String alamat = txtAlamat.getText();
+
+        if (id.isEmpty() || nama.isEmpty() || jk.isEmpty() || status.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Harap pilih data dari tabel terlebih dahulu!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String tglMySQL = tglInput;
+        try {
+            java.util.Date date = new java.text.SimpleDateFormat("dd-MM-yyyy").parse(tglInput);
+            tglMySQL = new java.text.SimpleDateFormat("yyyy-MM-dd").format(date);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Format tanggal salah! Gunakan DD-MM-YYYY", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        String sql = "UPDATE tb_karyawan SET nama=?, id_golongan=?, jenis_kelamin=?, tempat_lahir=?, tanggal_lahir=?, status=?, alamat=? WHERE id_karyawan=?";
+        if (DatabaseHelper.executeUpdate(sql, nama, idGol, jk, tempat, tglMySQL, status, alamat, id)) {
+            JOptionPane.showMessageDialog(this, "Data Karyawan berhasil diupdate!");
+            loadData();
+            resetForm();
+        }
+    }
+    
+    private void deleteData() {
+        String id = txtIdKaryawan.getText();
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Pilih data yang akan dihapus dari tabel!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        int konfirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus data Karyawan " + id + "?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (konfirm == JOptionPane.YES_OPTION) {
+            String sql = "DELETE FROM tb_karyawan WHERE id_karyawan=?";
+            if (DatabaseHelper.executeUpdate(sql, id)) {
+                JOptionPane.showMessageDialog(this, "Data berhasil dihapus!");
+                loadData();
+                resetForm();
+            }
         }
     }
     

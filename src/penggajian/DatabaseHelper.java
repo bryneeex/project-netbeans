@@ -51,6 +51,21 @@ public class DatabaseHelper {
         }
     }
 
+    public static ResultSet executeQuery(String sql, Object... params) {
+        try {
+            Connection c = getConnection();
+            if (c == null) return null;
+            PreparedStatement ps = c.prepareStatement(sql);
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
+            }
+            return ps.executeQuery();
+        } catch (SQLException e) {
+            showError("Gagal mengambil data!\n" + e.getMessage());
+            return null;
+        }
+    }
+
     public static boolean executeUpdate(String sql, Object... params) {
         try {
             Connection c = getConnection();
