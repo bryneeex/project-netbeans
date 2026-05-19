@@ -72,8 +72,6 @@ public class FormKaryawan extends JFrame {
         txtAlamat = new JTextArea(3, 20);
         pnlForm.add(new JScrollPane(txtAlamat));
         
-        add(pnlForm, BorderLayout.NORTH);
-        
         // Panel Buttons
         JPanel pnlButtons = new JPanel();
         pnlButtons.setOpaque(false);
@@ -85,13 +83,19 @@ public class FormKaryawan extends JFrame {
         
         pnlButtons.add(btnSave); pnlButtons.add(btnReset);
         pnlButtons.add(btnUpdate); pnlButtons.add(btnDelete); pnlButtons.add(btnExit);
-        add(pnlButtons, BorderLayout.CENTER);
+        
+        JPanel pnlTop = new JPanel(new BorderLayout());
+        pnlTop.setOpaque(false);
+        pnlTop.add(pnlForm, BorderLayout.CENTER);
+        pnlTop.add(pnlButtons, BorderLayout.SOUTH);
+        
+        add(pnlTop, BorderLayout.NORTH);
         
         // Panel Table
         String[] cols = {"ID", "Nama", "Golongan", "L/P", "Tempat", "Tgl Lahir", "Status", "Alamat"};
         tableModel = new DefaultTableModel(cols, 0);
         table = new JTable(tableModel);
-        add(new JScrollPane(table), BorderLayout.SOUTH);
+        add(new JScrollPane(table), BorderLayout.CENTER);
         
         btnExit.addActionListener(e -> dispose());
         btnSave.addActionListener(e -> simpanData());
