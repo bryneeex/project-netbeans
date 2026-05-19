@@ -87,7 +87,7 @@ public class FormPenggajian extends JFrame {
     private void simpanData() {
         try {
             String id = txtIdGaji.getText();
-            String tgl = txtTanggalGajiPlaceholder.getText();
+            String tglInput = txtTanggalGajiPlaceholder.getText();
             String idKaryawan = cbIdKaryawan.getSelectedItem().toString();
             String nama = txtNamaKaryawan.getText();
             String golongan = txtGolongan.getText();
@@ -97,15 +97,26 @@ public class FormPenggajian extends JFrame {
                 hitungGaji();
             }
             
+            // Konversi format tanggal
+            String tglMySQL = tglInput;
+            try {
+                java.text.SimpleDateFormat formatInput = new java.text.SimpleDateFormat("dd-MM-yyyy");
+                java.text.SimpleDateFormat formatDB = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                tglMySQL = formatDB.format(formatInput.parse(tglInput));
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Format tanggal salah! Gunakan format DD-MM-YYYY", "Error Tanggal", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
             double gapok = Double.parseDouble(txtJumlahGaji.getText().isEmpty() ? "0" : txtJumlahGaji.getText());
             double lembur = Double.parseDouble(txtJumlahLembur.getText().isEmpty() ? "0" : txtJumlahLembur.getText());
             double potongan = Double.parseDouble(txtPotongan.getText().isEmpty() ? "0" : txtPotongan.getText());
             double total = Double.parseDouble(txtTotalGaji.getText());
             
             String sql = "INSERT INTO tb_penggajian VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            if (DatabaseHelper.executeUpdate(sql, id, tgl, idKaryawan, nama, golongan, gapok, lembur, potongan, total)) {
+            if (DatabaseHelper.executeUpdate(sql, id, tglMySQL, idKaryawan, nama, golongan, gapok, lembur, potongan, total)) {
                 JOptionPane.showMessageDialog(this, "Data Penggajian berhasil disimpan!");
-                tableModel.addRow(new Object[]{id, tgl, idKaryawan, nama, golongan, gapok, lembur, potongan, total});
+                tableModel.addRow(new Object[]{id, tglInput, idKaryawan, nama, golongan, gapok, lembur, potongan, total});
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Pastikan format angka benar sebelum menyimpan!", "Error Validasi", JOptionPane.ERROR_MESSAGE);

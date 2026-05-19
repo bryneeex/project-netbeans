@@ -103,7 +103,7 @@ public class FormKaryawan extends JFrame {
         String idGol = cbIdGolongan.getSelectedItem().toString();
         String jk = rbLaki.isSelected() ? "Laki-laki" : (rbPerempuan.isSelected() ? "Perempuan" : "");
         String tempat = txtTempat.getText();
-        String tgl = txtTanggalLahirPlaceholder.getText(); // Placeholder tgl
+        String tglInput = txtTanggalLahirPlaceholder.getText(); // Input dari user (DD-MM-YYYY)
         String status = rbMenikah.isSelected() ? "Menikah" : (rbBelum.isSelected() ? "Belum Menikah" : "");
         String alamat = txtAlamat.getText();
 
@@ -112,10 +112,22 @@ public class FormKaryawan extends JFrame {
             return;
         }
 
+        // Konversi DD-MM-YYYY menjadi YYYY-MM-DD untuk MySQL
+        String tglMySQL = tglInput;
+        try {
+            java.text.SimpleDateFormat formatInput = new java.text.SimpleDateFormat("dd-MM-yyyy");
+            java.text.SimpleDateFormat formatDB = new java.text.SimpleDateFormat("yyyy-MM-dd");
+            java.util.Date date = formatInput.parse(tglInput);
+            tglMySQL = formatDB.format(date);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Format tanggal salah! Gunakan format DD-MM-YYYY (Contoh: 17-03-2009)", "Error Tanggal", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         String sql = "INSERT INTO tb_karyawan (id_karyawan, nama, id_golongan, jenis_kelamin, tempat_lahir, tanggal_lahir, status, alamat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-        if (DatabaseHelper.executeUpdate(sql, id, nama, idGol, jk, tempat, tgl, status, alamat)) {
+        if (DatabaseHelper.executeUpdate(sql, id, nama, idGol, jk, tempat, tglMySQL, status, alamat)) {
             JOptionPane.showMessageDialog(this, "Data Karyawan berhasil disimpan!");
-            tableModel.addRow(new Object[]{id, nama, idGol, jk, tempat, tgl, status, alamat});
+            tableModel.addRow(new Object[]{id, nama, idGol, jk, tempat, tglInput, status, alamat});
         }
     }
     

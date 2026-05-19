@@ -71,13 +71,24 @@ public class FormLembur extends JFrame {
         try {
             String id = txtIdLembur.getText();
             String idKaryawan = cbIdKaryawan.getSelectedItem().toString();
-            String tgl = txtTanggalLemburPlaceholder.getText();
+            String tglInput = txtTanggalLemburPlaceholder.getText();
             int jam = Integer.parseInt(txtJumlah.getText());
             
+            // Konversi format tanggal
+            String tglMySQL = tglInput;
+            try {
+                java.text.SimpleDateFormat formatInput = new java.text.SimpleDateFormat("dd-MM-yyyy");
+                java.text.SimpleDateFormat formatDB = new java.text.SimpleDateFormat("yyyy-MM-dd");
+                tglMySQL = formatDB.format(formatInput.parse(tglInput));
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Format tanggal salah! Gunakan format DD-MM-YYYY", "Error Tanggal", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
             String sql = "INSERT INTO tb_lembur VALUES (?, ?, ?, ?)";
-            if (DatabaseHelper.executeUpdate(sql, id, idKaryawan, tgl, jam)) {
+            if (DatabaseHelper.executeUpdate(sql, id, idKaryawan, tglMySQL, jam)) {
                 JOptionPane.showMessageDialog(this, "Data Lembur berhasil disimpan!");
-                tableModel.addRow(new Object[]{id, idKaryawan, tgl, jam});
+                tableModel.addRow(new Object[]{id, idKaryawan, tglInput, jam});
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Jumlah Jam harus berupa angka!", "Error Validasi", JOptionPane.ERROR_MESSAGE);
