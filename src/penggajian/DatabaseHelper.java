@@ -17,7 +17,7 @@ public class DatabaseHelper {
             if (conn == null || conn.isClosed()) {
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 String url = "jdbc:mysql://" + HOST + ":" + PORT + "/" + DB
-                        + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Jakarta";
+                        + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Jakarta&zeroDateTimeBehavior=convertToNull";
                 conn = DriverManager.getConnection(url, USER, PASS);
             }
         } catch (ClassNotFoundException e) {
