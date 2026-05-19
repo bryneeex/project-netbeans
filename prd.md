@@ -92,3 +92,5 @@ Halaman ini menggunakan *interface* berbasis tombol besar berlatar belakang biru
 ### 4.2. Panduan Desain Antarmuka (UI/UX)
 * **Warna Tema:** Seluruh jendela formulir menggunakan warna latar belakang biru solid.
 * **Validasi Input:** Field numerik (seperti nominal uang atau jumlah anak) tidak boleh menerima input karakter berupa teks/huruf untuk menghindari terjadinya error atau *exception crash* pada program database.
+
+Created By Muhammad Fardhan Ilmansyah & Muhammad Raditya Gozal
