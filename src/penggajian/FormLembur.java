@@ -64,6 +64,24 @@ public class FormLembur extends JFrame {
         add(new JScrollPane(table), BorderLayout.SOUTH);
         
         btnExit.addActionListener(e -> dispose());
+        btnSave.addActionListener(e -> simpanData());
+    }
+    
+    private void simpanData() {
+        try {
+            String id = txtIdLembur.getText();
+            String idKaryawan = cbIdKaryawan.getSelectedItem().toString();
+            String tgl = txtTanggalLemburPlaceholder.getText();
+            int jam = Integer.parseInt(txtJumlah.getText());
+            
+            String sql = "INSERT INTO tb_lembur VALUES (?, ?, ?, ?)";
+            if (DatabaseHelper.executeUpdate(sql, id, idKaryawan, tgl, jam)) {
+                JOptionPane.showMessageDialog(this, "Data Lembur berhasil disimpan!");
+                tableModel.addRow(new Object[]{id, idKaryawan, tgl, jam});
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Jumlah Jam harus berupa angka!", "Error Validasi", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     private JLabel createLabel(String text) {

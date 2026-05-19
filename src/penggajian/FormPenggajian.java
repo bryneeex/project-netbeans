@@ -81,6 +81,35 @@ public class FormPenggajian extends JFrame {
         
         btnExit.addActionListener(e -> dispose());
         btnHitung.addActionListener(e -> hitungGaji());
+        btnSave.addActionListener(e -> simpanData());
+    }
+    
+    private void simpanData() {
+        try {
+            String id = txtIdGaji.getText();
+            String tgl = txtTanggalGajiPlaceholder.getText();
+            String idKaryawan = cbIdKaryawan.getSelectedItem().toString();
+            String nama = txtNamaKaryawan.getText();
+            String golongan = txtGolongan.getText();
+            
+            // Hitung dulu jika belum dihitung
+            if (txtTotalGaji.getText().isEmpty()) {
+                hitungGaji();
+            }
+            
+            double gapok = Double.parseDouble(txtJumlahGaji.getText().isEmpty() ? "0" : txtJumlahGaji.getText());
+            double lembur = Double.parseDouble(txtJumlahLembur.getText().isEmpty() ? "0" : txtJumlahLembur.getText());
+            double potongan = Double.parseDouble(txtPotongan.getText().isEmpty() ? "0" : txtPotongan.getText());
+            double total = Double.parseDouble(txtTotalGaji.getText());
+            
+            String sql = "INSERT INTO tb_penggajian VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            if (DatabaseHelper.executeUpdate(sql, id, tgl, idKaryawan, nama, golongan, gapok, lembur, potongan, total)) {
+                JOptionPane.showMessageDialog(this, "Data Penggajian berhasil disimpan!");
+                tableModel.addRow(new Object[]{id, tgl, idKaryawan, nama, golongan, gapok, lembur, potongan, total});
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Pastikan format angka benar sebelum menyimpan!", "Error Validasi", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     private void hitungGaji() {

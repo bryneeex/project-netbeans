@@ -94,6 +94,29 @@ public class FormKaryawan extends JFrame {
         add(new JScrollPane(table), BorderLayout.SOUTH);
         
         btnExit.addActionListener(e -> dispose());
+        btnSave.addActionListener(e -> simpanData());
+    }
+    
+    private void simpanData() {
+        String id = txtIdKaryawan.getText();
+        String nama = txtNama.getText();
+        String idGol = cbIdGolongan.getSelectedItem().toString();
+        String jk = rbLaki.isSelected() ? "Laki-laki" : (rbPerempuan.isSelected() ? "Perempuan" : "");
+        String tempat = txtTempat.getText();
+        String tgl = txtTanggalLahirPlaceholder.getText(); // Placeholder tgl
+        String status = rbMenikah.isSelected() ? "Menikah" : (rbBelum.isSelected() ? "Belum Menikah" : "");
+        String alamat = txtAlamat.getText();
+
+        if (id.isEmpty() || nama.isEmpty() || jk.isEmpty() || status.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Harap lengkapi semua data wajib!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        String sql = "INSERT INTO tb_karyawan (id_karyawan, nama, id_golongan, jenis_kelamin, tempat_lahir, tanggal_lahir, status, alamat) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        if (DatabaseHelper.executeUpdate(sql, id, nama, idGol, jk, tempat, tgl, status, alamat)) {
+            JOptionPane.showMessageDialog(this, "Data Karyawan berhasil disimpan!");
+            tableModel.addRow(new Object[]{id, nama, idGol, jk, tempat, tgl, status, alamat});
+        }
     }
     
     private JLabel createLabel(String text) {

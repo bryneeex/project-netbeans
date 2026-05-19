@@ -71,7 +71,29 @@ public class FormGolongan extends JFrame {
         
         // Events
         btnExit.addActionListener(e -> dispose());
+        btnSave.addActionListener(e -> simpanData());
         // TODO: Impelementasi Event CRUD ke DatabaseHelper
+    }
+    
+    private void simpanData() {
+        try {
+            String id = txtIdGolongan.getText();
+            String nama = txtNamaGolongan.getText();
+            double gapok = Double.parseDouble(txtGajiPokok.getText());
+            double tjIstri = Double.parseDouble(txtTunjanganIstri.getText());
+            int anak = Integer.parseInt(txtJumlahAnak.getText());
+            double tjAnak = Double.parseDouble(txtTunjanganAnak.getText());
+            double transport = Double.parseDouble(txtTransport.getText());
+            double makan = Double.parseDouble(txtUangMakan.getText());
+            
+            String sql = "INSERT INTO tb_golongan VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            if (DatabaseHelper.executeUpdate(sql, id, nama, gapok, tjIstri, anak, tjAnak, transport, makan)) {
+                JOptionPane.showMessageDialog(this, "Data Golongan berhasil disimpan!");
+                tableModel.addRow(new Object[]{id, nama, gapok, tjIstri, anak, tjAnak, transport, makan});
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Pastikan field numerik diisi dengan angka saja!", "Error Validasi", JOptionPane.ERROR_MESSAGE);
+        }
     }
     
     private JLabel createLabel(String text) {

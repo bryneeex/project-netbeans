@@ -51,6 +51,21 @@ public class DatabaseHelper {
         }
     }
 
+    public static boolean executeUpdate(String sql, Object... params) {
+        try {
+            Connection c = getConnection();
+            if (c == null) return false;
+            PreparedStatement ps = c.prepareStatement(sql);
+            for (int i = 0; i < params.length; i++) {
+                ps.setObject(i + 1, params[i]);
+            }
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            showError("Gagal menyimpan data!\n" + e.getMessage());
+            return false;
+        }
+    }
+
     private static void showError(String msg) {
         javax.swing.JOptionPane.showMessageDialog(null, msg, "Database Error",
                 javax.swing.JOptionPane.ERROR_MESSAGE);
