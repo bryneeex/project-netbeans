@@ -32,3 +32,6 @@
 # # IDE files
 # *.iml
 # .idea/
+
+# Naskah presentasi (jangan di-upload ke GitHub)
+naskah_presentasi.txt
