@@ -56,37 +56,110 @@ public class FormPenggajian extends JFrame {
         pnlForm.add(createLabel("Total Gaji Bersih:"));
         txtTotalGaji = new JTextField(); txtTotalGaji.setEditable(false); pnlForm.add(txtTotalGaji);
         
-        add(pnlForm, BorderLayout.NORTH);
+        JPanel pnlTop = new JPanel(new BorderLayout());
+        pnlTop.setOpaque(false);
+        pnlTop.add(pnlForm, BorderLayout.CENTER);
+        pnlTop.add(pnlButtons, BorderLayout.SOUTH);
         
-        // Panel Buttons
-        JPanel pnlButtons = new JPanel();
-        pnlButtons.setOpaque(false);
-        JButton btnHitung = new JButton("Hitung Total");
-        JButton btnSave = new JButton("Save");
-        JButton btnReset = new JButton("Reset");
-        JButton btnUpdate = new JButton("Update");
-        JButton btnDelete = new JButton("Delete");
-        JButton btnExit = new JButton("Exit");
-        
-        pnlButtons.add(btnHitung);
-        pnlButtons.add(btnSave); pnlButtons.add(btnReset);
-        pnlButtons.add(btnUpdate); pnlButtons.add(btnDelete); pnlButtons.add(btnExit);
-        add(pnlButtons, BorderLayout.CENTER);
+        add(pnlTop, BorderLayout.NORTH);
         
         // Panel Table
         String[] cols = {"ID Gaji", "Tgl", "ID Kary", "Nama", "Golongan", "Gaji", "Lembur", "Potongan", "Total"};
         tableModel = new DefaultTableModel(cols, 0);
         table = new JTable(tableModel);
-        add(new JScrollPane(table), BorderLayout.SOUTH);
+        add(new JScrollPane(table), BorderLayout.CENTER);
         
         btnExit.addActionListener(e -> dispose());
         btnHitung.addActionListener(e -> hitungGaji());
         btnSave.addActionListener(e -> simpanData());
+        btnUpdate.addActionListener(e -> updateData());
+        btnDelete.addActionListener(e -> deleteData());
+        btnReset.addActionListener(e -> resetForm());
+        
+        table.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tabelKlik();
+            }
+        });
+        
+        loadKaryawan();
+        loadData();
+    }
+    
+    private void loadKaryawan() {
+        cbIdKaryawan.removeAllItems();
+        try {
+            java.sql.ResultSet rs = DatabaseHelper.executeQuery("SELECT id_karyawan FROM tb_karyawan");
+            while (rs != null && rs.next()) {
+                cbIdKaryawan.addItem(rs.getString("id_karyawan"));
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void loadData() {
+        tableModel.setRowCount(0);
+        try {
+            java.sql.ResultSet rs = DatabaseHelper.executeQuery("SELECT * FROM tb_penggajian");
+            while (rs != null && rs.next()) {
+                String tglMySQL = rs.getString("tanggal");
+                String tglDisplay = tglMySQL;
+                try {
+                    java.util.Date date = new java.text.SimpleDateFormat("yyyy-MM-dd").parse(tglMySQL);
+                    tglDisplay = new java.text.SimpleDateFormat("dd-MM-yyyy").format(date);
+                } catch (Exception ignored) {}
+                
+                tableModel.addRow(new Object[]{
+                    rs.getString("id_penggajian"), tglDisplay, rs.getString("id_karyawan"), 
+                    rs.getString("nama_karyawan"), rs.getString("golongan"), 
+                    rs.getDouble("gaji_pokok"), rs.getDouble("lembur"), 
+                    rs.getDouble("potongan"), rs.getDouble("total_gaji")
+                });
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    private void tabelKlik() {
+        int row = table.getSelectedRow();
+        if(row >= 0) {
+            txtIdGaji.setText(tableModel.getValueAt(row, 0).toString());
+            txtTanggalGajiPlaceholder.setText(tableModel.getValueAt(row, 1).toString());
+            cbIdKaryawan.setSelectedItem(tableModel.getValueAt(row, 2).toString());
+            txtNamaKaryawan.setText(tableModel.getValueAt(row, 3).toString());
+            txtGolongan.setText(tableModel.getValueAt(row, 4).toString());
+            txtJumlahGaji.setText(tableModel.getValueAt(row, 5).toString());
+            txtJumlahLembur.setText(tableModel.getValueAt(row, 6).toString());
+            txtPotongan.setText(tableModel.getValueAt(row, 7).toString());
+            txtTotalGaji.setText(tableModel.getValueAt(row, 8).toString());
+        }
+    }
+    
+    private void resetForm() {
+        txtIdGaji.setText("");
+        txtTanggalGajiPlaceholder.setText("YYYY-MM-DD");
+        if(cbIdKaryawan.getItemCount() > 0) cbIdKaryawan.setSelectedIndex(0);
+        txtNamaKaryawan.setText("");
+        txtGolongan.setText("");
+        txtJumlahGaji.setText("");
+        txtJumlahLembur.setText("");
+        txtPotongan.setText("0");
+        txtTotalGaji.setText("");
     }
     
     private void simpanData() {
         try {
             String id = txtIdGaji.getText();
+            if (id.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "ID Gaji tidak boleh kosong!");
+                return;
+            }
+            if (cbIdKaryawan.getSelectedItem() == null) {
+                JOptionPane.showMessageDialog(this, "Data Karyawan kosong!");
+                return;
+            }
             String tglInput = txtTanggalGajiPlaceholder.getText();
             String idKaryawan = cbIdKaryawan.getSelectedItem().toString();
             String nama = txtNamaKaryawan.getText();
@@ -116,10 +189,67 @@ public class FormPenggajian extends JFrame {
             String sql = "INSERT INTO tb_penggajian VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             if (DatabaseHelper.executeUpdate(sql, id, tglMySQL, idKaryawan, nama, golongan, gapok, lembur, potongan, total)) {
                 JOptionPane.showMessageDialog(this, "Data Penggajian berhasil disimpan!");
-                tableModel.addRow(new Object[]{id, tglInput, idKaryawan, nama, golongan, gapok, lembur, potongan, total});
+                loadData();
+                resetForm();
             }
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Pastikan format angka benar sebelum menyimpan!", "Error Validasi", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void updateData() {
+        try {
+            String id = txtIdGaji.getText();
+            if (id.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Harap pilih data dari tabel terlebih dahulu!");
+                return;
+            }
+            String tglInput = txtTanggalGajiPlaceholder.getText();
+            String idKaryawan = cbIdKaryawan.getSelectedItem().toString();
+            String nama = txtNamaKaryawan.getText();
+            String golongan = txtGolongan.getText();
+            
+            if (txtTotalGaji.getText().isEmpty()) hitungGaji();
+            
+            String tglMySQL = tglInput;
+            try {
+                tglMySQL = new java.text.SimpleDateFormat("yyyy-MM-dd").format(new java.text.SimpleDateFormat("dd-MM-yyyy").parse(tglInput));
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "Format tanggal salah! Gunakan DD-MM-YYYY", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            
+            double gapok = Double.parseDouble(txtJumlahGaji.getText().isEmpty() ? "0" : txtJumlahGaji.getText());
+            double lembur = Double.parseDouble(txtJumlahLembur.getText().isEmpty() ? "0" : txtJumlahLembur.getText());
+            double potongan = Double.parseDouble(txtPotongan.getText().isEmpty() ? "0" : txtPotongan.getText());
+            double total = Double.parseDouble(txtTotalGaji.getText());
+            
+            String sql = "UPDATE tb_penggajian SET tanggal=?, id_karyawan=?, nama_karyawan=?, golongan=?, gaji_pokok=?, lembur=?, potongan=?, total_gaji=? WHERE id_penggajian=?";
+            if (DatabaseHelper.executeUpdate(sql, tglMySQL, idKaryawan, nama, golongan, gapok, lembur, potongan, total, id)) {
+                JOptionPane.showMessageDialog(this, "Data Penggajian berhasil diupdate!");
+                loadData();
+                resetForm();
+            }
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Format angka salah!", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    private void deleteData() {
+        String id = txtIdGaji.getText();
+        if (id.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Pilih data yang akan dihapus dari tabel!", "Peringatan", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        int konfirm = JOptionPane.showConfirmDialog(this, "Yakin ingin menghapus data Penggajian " + id + "?", "Konfirmasi", JOptionPane.YES_NO_OPTION);
+        if (konfirm == JOptionPane.YES_OPTION) {
+            String sql = "DELETE FROM tb_penggajian WHERE id_penggajian=?";
+            if (DatabaseHelper.executeUpdate(sql, id)) {
+                JOptionPane.showMessageDialog(this, "Data berhasil dihapus!");
+                loadData();
+                resetForm();
+            }
         }
     }
     
